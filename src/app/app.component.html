@@ -1,1 +1,12 @@
 <router-outlet></router-outlet>
+@for (user of users$ | async; track $index) {
+<h1>{{user.name}}</h1>
+}
+
+@for (user of usernames$ | async; track $index) {
+<h1>{{user}}</h1>
+}
+
+@for (user of user$ | async; track $index) {
+<h1>{{user.name}}</h1>
+}

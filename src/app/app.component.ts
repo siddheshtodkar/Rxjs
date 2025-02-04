@@ -1,14 +1,18 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { firstValueFrom, from, fromEvent, Observable, of } from 'rxjs';
+import { filter, firstValueFrom, from, fromEvent, map, Observable, of } from 'rxjs';
 import { CustomObserver } from './custom-observer';
+import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  imports: [RouterOutlet, AsyncPipe],
   templateUrl: './app.component.html'
 })
 export class AppComponent {
+  users$: Observable<any>
+  usernames$: Observable<string[]>
+  user$: Observable<any>
   constructor() {
 
     // convert normal array to observables
@@ -22,11 +26,21 @@ export class AppComponent {
       console.log(user)
     })
 
+    // to display using async pipe
+    this.users$ = usersOf$
+    // pipe and map function to create new array of names
+    this.usernames$ = this.users$.pipe(map(user =>
+      user.map((user: any) => user.name)
+    ))
+    // filter out id 2
+    this.user$ = this.users$.pipe(filter(user =>
+      user.filter((user: any) => true)
+    ))
+
     const usersFrom$ = from(users)
     usersFrom$.subscribe(user => {
       console.log(user)
     })
-
 
     // convert promise to observables
     const messagePromise = new Promise((resolve, reject) => {
