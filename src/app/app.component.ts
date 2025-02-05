@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { filter, firstValueFrom, from, fromEvent, map, Observable, of } from 'rxjs';
+import { BehaviorSubject, filter, firstValueFrom, from, fromEvent, map, Observable, of } from 'rxjs';
 import { CustomObserver } from './custom-observer';
 import { AsyncPipe } from '@angular/common';
 
@@ -13,6 +13,7 @@ export class AppComponent {
   users$: Observable<any>
   usernames$: Observable<string[]>
   user$: Observable<any>
+  userSubject$
   constructor() {
 
     // convert normal array to observables
@@ -114,5 +115,14 @@ export class AppComponent {
     })
     // using custom subscriber
     customeUser$.subscribe(new CustomObserver())
+
+    // behaviour subject
+    this.userSubject$ = new BehaviorSubject<{ id: number, name: string } | null>(null)
+    setTimeout(() => {
+      this.userSubject$.next(users[1])
+    }, 5000);
+    this.userSubject$.subscribe(data => {
+      console.log(data)
+    })
   }
 }

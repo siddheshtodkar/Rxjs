@@ -10,3 +10,5 @@
 @for (user of user$ | async; track $index) {
 <h1>{{user.name}}</h1>
 }
+
+<h1>{{(userSubject$ | async)?.name}}</h1>
