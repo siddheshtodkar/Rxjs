@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { BehaviorSubject, filter, firstValueFrom, from, fromEvent, map, Observable, of } from 'rxjs';
+import { BehaviorSubject, combineLatest, filter, firstValueFrom, from, fromEvent, map, Observable, of } from 'rxjs';
 import { CustomObserver } from './custom-observer';
 import { AsyncPipe } from '@angular/common';
 
@@ -14,6 +14,7 @@ export class AppComponent {
   usernames$: Observable<string[]>
   user$: Observable<any>
   userSubject$
+  combinedUserData$
   constructor() {
 
     // convert normal array to observables
@@ -122,6 +123,16 @@ export class AppComponent {
       this.userSubject$.next(users[1])
     }, 5000);
     this.userSubject$.subscribe(data => {
+      console.log(data)
+    })
+
+    // combine latest
+    this.combinedUserData$ = combineLatest([
+      this.user$,
+      this.userSubject$,
+      this.usernames$
+    ])
+    this.combinedUserData$.subscribe(data => {
       console.log(data)
     })
   }
