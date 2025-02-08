@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { BehaviorSubject, combineLatest, filter, firstValueFrom, from, fromEvent, map, Observable, of } from 'rxjs';
+import { AsyncSubject, BehaviorSubject, combineLatest, filter, firstValueFrom, from, fromEvent, map, Observable, of, ReplaySubject, Subject } from 'rxjs';
 import { CustomObserver } from './custom-observer';
 import { AsyncPipe } from '@angular/common';
 
@@ -135,5 +135,54 @@ export class AppComponent {
     this.combinedUserData$.subscribe(data => {
       console.log(data)
     })
+
+    this.subject()
+  }
+
+
+  subject() {
+    // AsyncSubject - only executes when complete is called and uses latest value
+    // nothing happens on next and subscribe 
+    console.log('AsyncSubject')
+    const asyncSubject$ = new AsyncSubject();
+    asyncSubject$.subscribe(console.log);
+    asyncSubject$.next(123); //nothing logged
+    asyncSubject$.subscribe(console.log);
+    asyncSubject$.next(456); //nothing logged
+    asyncSubject$.complete(); //456, 456 logged by both subscribers
+
+
+    // BehaviorSubject - emits latest value to all subscribers (initial value mandatory)
+    // subscribers executed on both next and subscribe
+    console.log('BehaviorSubject')
+    const behaviorSubject$ = new BehaviorSubject(123)
+    behaviorSubject$.subscribe(console.log); // output: 123
+    behaviorSubject$.next(456); // output: 456 
+    behaviorSubject$.subscribe(console.log); // output: 456, 456
+    behaviorSubject$.next(789); // output 789, 789
+
+
+    // ReplaySubject - emits previous n values to all subscribers
+    // subscribers executed only once on next and n times on subscriber
+    console.log('ReplaySubject')
+    const replaySubject$ = new ReplaySubject(3)
+    replaySubject$.next(1);
+    replaySubject$.next(2);
+    replaySubject$.subscribe(console.log); // OUTPUT => 1,2
+    replaySubject$.next(3); // OUTPUT => 3
+    replaySubject$.next(4); // OUTPUT => 4
+    replaySubject$.subscribe(console.log); // OUTPUT => 2,3,4 (log of last 3 values from new subscriber)
+    replaySubject$.next(5); // OUTPUT => 5,5 (log from both subscribers)
+
+
+    // Subject - emits latest value to all subscribers
+    // subcribers executed on next and nothing happens on subscribe 
+    const subject$ = new Subject();
+    console.log('Subject')
+    subject$.next(1);
+    subject$.subscribe(console.log)
+    subject$.next(2); // OUTPUT => 2
+    subject$.subscribe(console.log);
+    subject$.next(3); // OUTPUT => 3, 3 (logged from both subscribers)
   }
 }
