@@ -1,22 +1,15 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { AsyncSubject, BehaviorSubject, combineLatest, filter, firstValueFrom, from, fromEvent, map, Observable, of, ReplaySubject, Subject } from 'rxjs';
+import { AsyncSubject, BehaviorSubject, combineLatest, concatMap, delay, exhaustMap, filter, firstValueFrom, from, fromEvent, map, mergeMap, Observable, of, ReplaySubject, startWith, Subject, switchMap, tap } from 'rxjs';
 import { CustomObserver } from './custom-observer';
-import { AsyncPipe } from '@angular/common';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, AsyncPipe],
+  imports: [RouterOutlet],
   templateUrl: './app.component.html'
 })
 export class AppComponent {
-  users$: Observable<any>
-  usernames$: Observable<string[]>
-  user$: Observable<any>
-  userSubject$
-  combinedUserData$
   constructor() {
-
     // convert normal array to observables
     const users = [
       { id: 1, name: "john" },
@@ -28,17 +21,6 @@ export class AppComponent {
       console.log(user)
     })
 
-    // to display using async pipe
-    this.users$ = usersOf$
-    // pipe and map function to create new array of names
-    this.usernames$ = this.users$.pipe(map(user =>
-      user.map((user: any) => user.name)
-    ))
-    // filter out id 2
-    this.user$ = this.users$.pipe(filter(user =>
-      user.filter((user: any) => true)
-    ))
-
     const usersFrom$ = from(users)
     usersFrom$.subscribe(user => {
       console.log(user)
@@ -46,10 +28,9 @@ export class AppComponent {
 
     // convert promise to observables
     const messagePromise = new Promise((resolve, reject) => {
-      // resolve('promise resolved')
+      resolve('promise resolved')
       reject('promise rejected')
     })
-
     const messagePromiseOf$ = of(messagePromise)
     messagePromiseOf$.subscribe(messagePromise => {
       console.log(messagePromise)
@@ -57,7 +38,7 @@ export class AppComponent {
 
     const messagePromiseFrom$ = from(messagePromise)
     // method1
-    messagePromiseFrom$.subscribe((messagePromise) => {
+    messagePromiseFrom$.subscribe(messagePromise => {
       console.log(messagePromise)
     }, err => {
       console.log(err)
@@ -117,26 +98,8 @@ export class AppComponent {
     // using custom subscriber
     customeUser$.subscribe(new CustomObserver())
 
-    // behaviour subject
-    this.userSubject$ = new BehaviorSubject<{ id: number, name: string } | null>(null)
-    setTimeout(() => {
-      this.userSubject$.next(users[1])
-    }, 5000);
-    this.userSubject$.subscribe(data => {
-      console.log(data)
-    })
-
-    // combine latest
-    this.combinedUserData$ = combineLatest([
-      this.user$,
-      this.userSubject$,
-      this.usernames$
-    ])
-    this.combinedUserData$.subscribe(data => {
-      console.log(data)
-    })
-
     this.subject()
+    this.operators()
   }
 
 
@@ -184,5 +147,48 @@ export class AppComponent {
     subject$.next(2); // OUTPUT => 2
     subject$.subscribe(console.log);
     subject$.next(3); // OUTPUT => 3, 3 (logged from both subscribers)
+  }
+
+  async operators() {
+    const example$ = from([1, 2, 3, 4, 5])
+    const firstExample$ = new Observable<number>((Observer) => {
+      setTimeout(() => { Observer.next(1) }, 100)
+      setTimeout(() => { Observer.next(2) }, 200)
+      setTimeout(() => { Observer.next(3) }, 300)
+      setTimeout(() => { Observer.next(4) }, 400)
+      setTimeout(() => { Observer.next(5) }, 500)
+    })
+    const secondExample$ = new Observable<number>((Observer) => {
+      setTimeout(() => { Observer.next(6) }, 100)
+      setTimeout(() => { Observer.next(7) }, 200)
+      setTimeout(() => { Observer.next(8) }, 300)
+      setTimeout(() => { Observer.next(9) }, 400)
+    })
+    console.log('Operators Example')
+    example$.subscribe(console.log)
+    // map
+    console.log('Map')
+    example$.pipe(map(value => value * 10)).subscribe(console.log)
+    // filter
+    console.log('Filter')
+    example$.pipe(filter(value => value <= 3)).subscribe(console.log)
+    // tap
+    console.log('Tap')
+    example$.pipe(tap(console.log)).subscribe(console.log)
+    // startWith
+    console.log('startWIth')
+    example$.pipe(startWith(0)).subscribe(console.log)
+    // combineLatest
+    combineLatest([firstExample$, secondExample$]).pipe(
+      map(([first, second]) => ({ first, second }))
+    ).subscribe(x => console.log('combineLatest ', x))
+    // switchMap
+    firstExample$.pipe(switchMap(value => secondExample$.pipe(map(value2 => value * value2)))).subscribe(x => console.log('switchMap', x))
+    // mergeMap
+    firstExample$.pipe(mergeMap(value => secondExample$.pipe(map(value2 => value * value2)))).subscribe(x => console.log('mergeMap', x))
+    // concatMap
+    firstExample$.pipe(concatMap(value => secondExample$.pipe(map(value2 => value * value2)))).subscribe(x => console.log('concatMap', x))
+    // exhaustMap
+    firstExample$.pipe(exhaustMap(value => secondExample$.pipe(map(value2 => value * value2)))).subscribe(x => console.log('exhaustMap', x))
   }
 }
